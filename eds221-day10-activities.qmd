@@ -1,0 +1,74 @@
+---
+title: "eds221-day10-activity"
+author: "mish"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+```{r}
+ice_data <- read_csv(here("data", "ntl33_v7.csv"), na = c("-999", "")) %>% clean_names()
+meteo_data <- read_csv(here("data", "ntl20_v6.csv")) %>% clean_names()
+```
+
+```{r}
+ice_dur_lakes <- ice_data %>%
+  group_by(year4, lakeid) %>%
+  summarize(mean_ice = mean(ice_duration, na.rm = TRUE))
+
+ggplot(data = ice_dur_lakes, aes(x =  year4, y = mean_ice)) + geom_jitter(aes(color = lakeid)) +
+  labs(x = "year",
+       y = "mean ice duration (days)",
+       title = "Mean ice duration across Lakes")
+```
+
+```{r}
+ice_lake <- ice_data %>%
+  group_by(year4) %>%
+  summarise(mean_ice_year = mean(ice_duration, na.rm = TRUE))
+
+ggplot(data = ice_lake, aes(x = year4, y = mean_ice_year)) + geom_point() +
+  #stat_summary(geom="line", fun = "mean", color="black", size=1, linetype="solid") +
+  #geom_abline(yintercept = mean(ice_data$ice_duration, na.rm = TRUE), color="blue") +
+  geom_line() +
+  labs(x = "Year",
+       y = "Mean Ice cover duration (days)",
+       title = "Mean ice cover duration by year")
+
+## Overall the trend is pointing downwards, as the years progress the mean ice cover decreases
+```
+
+```{r}
+mean_air_temp <- meteo_data %>%
+  filter(month %in% c(12, 1, 2)) %>%
+  group_by(year4) %>%
+  summarise(mean_temp = mean(ave_air_temp_adjusted, na.rm = TRUE))
+
+ggplot(data = mean_air_temp, aes(x = year4, y = mean_temp)) + geom_point() +
+  labs(x = "Year",
+       y = "Mean air temperature (c) ",
+       title = "Mean winter temperatures of Madison Lake (c)" )
+
+# The mean air temperature is increasing over the years - upward trend
+```
+
+```{r}
+joined_temp_ice <- full_join(mean_air_temp, ice_dur_lakes)
+
+ggplot(data = joined_temp_ice, aes(x = mean_temp, y = mean_ice)) + geom_point() +
+  labs(x = "Mean Temp (c)",
+       y = "Mean Ice Cover Duration (days)")
+
+# As Mean air temperature increases, the duration of ice cover decreases
+```
+
+```{r}
+
+```
+
